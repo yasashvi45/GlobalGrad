@@ -1,0 +1,30 @@
+{
+  "entities": {
+    "users": {
+       "title": "User",
+       "description": "User account",
+       "type": "object",
+       "properties": {
+          "email": { "type": "string" },
+          "role": { "type": "string" },
+          "name": { "type": "string" }
+       }
+    },
+    "generic": {
+      "title": "Generic Item",
+      "description": "Any item in a generic collection",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "#/entities/users",
+      "description": "User profiles"
+    },
+    "{collection}/{itemId}": {
+      "schema": "#/entities/generic",
+      "description": "Generic collections mapping directly to frontend tables"
+    }
+  }
+}

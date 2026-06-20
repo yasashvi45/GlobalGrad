@@ -1,0 +1,6 @@
+{
+  "name": "GlobalGrad",
+  "description": "Premium Study Abroad Planning Platform to discover countries, compare universities, track applications, and manage student budgets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
