@@ -1,0 +1,206 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Core Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data 
+        : {role: 'student'};
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (getUserData().role == 'admin' || getUserData().role == 'super_admin');
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && getUserData().role == 'super_admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isResourceOwner() {
+      return isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ------------------------------------------------------------------------
+    // PLATFORM DATA (Countries, Universities, Scholarships, AI Settings)
+    // ------------------------------------------------------------------------
+    match /countries/{countryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /universities/{universityId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /scholarships/{scholarshipId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /ai_settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /global_notifications/{notifId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /admin_notifications/{notifId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isSignedIn();
+    }
+    
+    match /admin_notes/{noteId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // USER DATA & ROLES
+    // ------------------------------------------------------------------------
+    match /users/{userId} {
+      // Admins can read all users
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Super admins can write everything
+      allow create: if isSuperAdmin() || 
+                       (isOwner(userId) && (request.resource.data.role == 'student' || !('role' in request.resource.data) || request.resource.data.role == null));
+      
+      // Update logic:
+      // - Admins can update.
+      // - Users can update themselves, but CANNOT change their `role` or `status`
+      allow update: if isSuperAdmin() || 
+                       (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'profileCompleted', 'lastLogin', 'name', 'email'])) ||
+                       (isOwner(userId) && !incoming().diff(existing()).affectedKeys().hasAny(['role', 'status', 'adminLevel']));
+                       
+      allow delete: if isSuperAdmin() || (isAdmin() && existing().role != 'super_admin');
+      
+      function incoming() { return request.resource.data; }
+      function existing() { return resource.data; }
+    }
+
+    match /users/{userId}/aiChats/{chatId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // ------------------------------------------------------------------------
+    // STUDENT RESOURCES (Profiles, Applications, Saved Items, Documents, Tasks)
+    // ------------------------------------------------------------------------
+    
+    // Shared rules function for resources associated with a user
+    function isStudentResource(userIdField) {
+      return (request.method == 'create' && request.resource.data[userIdField] == request.auth.uid) ||
+             (request.method != 'create' && resource.data[userIdField] == request.auth.uid) ||
+             isAdmin();
+    }
+
+    match /profiles/{userId} {
+      allow read: if isOwner(userId) || (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+    
+    match /applications/{appId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /documents/{docId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /study_preferences/{prefId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /test_scores/{scoreId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /work_experience/{expId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /academic_profiles/{acadId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /countries_saved/{saveId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /universities_saved/{saveId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /scholarships_saved/{saveId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /tasks/{taskId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /notifications/{notifId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /activities/{actId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    match /events/{eventId} {
+      allow read, write: if isStudentResource('userId');
+    }
+
+    // ------------------------------------------------------------------------
+    // COMMS & CHATS
+    // ------------------------------------------------------------------------
+    match /chats/{chatId} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants) || (isSignedIn() && request.auth.uid in request.resource.data.participants);
+    }
+    
+    match /messages/{messageId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /ai_conversations/{id} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /ai_messages/{id} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /ai_bookmarks/{id} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /ai_exports/{id} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /ai_reports/{id} {
+      allow read, write: if isSignedIn();
+    }
+
+  }
+}
