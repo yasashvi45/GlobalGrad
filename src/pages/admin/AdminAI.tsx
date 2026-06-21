@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { getTable, saveToTable } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE } from "../../config";
 
 export default function AdminAI() {
   const { userData } = useAuth();
@@ -26,7 +27,7 @@ export default function AdminAI() {
 
   const fetchHealth = async () => {
     try {
-      const res = await fetch('/api/health');
+      const res = await fetch(`${API_BASE}/api/health`);
       if (res.ok) setHealthData(await res.json());
     } catch(e){}
   };
@@ -35,7 +36,7 @@ export default function AdminAI() {
 
   const fetchHistory = async () => {
      try {
-        const res = await fetch('/api/ai/history');
+        const res = await fetch(`${API_BASE}/api/ai/history`);
         if (res.ok) {
            const data = await res.json();
            setConversationHistory(data.history || []);
@@ -45,7 +46,7 @@ export default function AdminAI() {
 
   const fetchOperations = async () => {
      try {
-        const res = await fetch('/api/ai/operations');
+        const res = await fetch(`${API_BASE}/api/ai/operations`);
         if (res.ok) {
            const data = await res.json();
            setAuditLogs(data.operations || []);
@@ -108,7 +109,7 @@ export default function AdminAI() {
            }
         };
 
-        const res = await fetch('/api/ai/chat', {
+        const res = await fetch(`${API_BASE}/api/ai/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -178,7 +179,7 @@ export default function AdminAI() {
          }
       };
 
-      const res = await fetch('/api/ai/operations/generate', {
+      const res = await fetch(`${API_BASE}/api/ai/operations/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -228,7 +229,7 @@ export default function AdminAI() {
 
   const handleApprove = async (preview: any, messageId: string) => {
     try {
-      const res = await fetch('/api/ai/operations/approve', {
+      const res = await fetch(`${API_BASE}/api/ai/operations/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

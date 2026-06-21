@@ -3,6 +3,7 @@ import { PieChart, Download, Users, Landmark, BookOpen, MapPin, FileText, CheckC
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell, Pie, Legend, LineChart, Line } from 'recharts';
 import { getTable } from '@/lib/api';
 import { downloadCSV } from '@/lib/exportUtils';
+import { API_BASE } from "../../config";
 
 export default function AdminAnalytics() {
   const [data, setData] = useState<any>(null);
@@ -136,7 +137,7 @@ export default function AdminAnalytics() {
     if (!aiQuery.trim()) return;
     setIsAiLoading(true);
     try {
-      const res = await fetch('/api/ai/chat', {
+      const res = await fetch(`${API_BASE}/api/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
