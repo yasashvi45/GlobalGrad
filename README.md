@@ -4,7 +4,7 @@ GlobalGrad is a full-stack web application that helps students explore study-abr
 
 ## 🚀 Live Demo
 
-Frontend: https://global-grad-li1yeff3s-yasashvichowdaryvallepalli-5916s-projects.vercel.app
+Frontend:https://global-grad-im0rw36bo-yasashvichowdaryvallepalli-5916s-projects.vercel.app/
 
 Backend API: https://globalgrad.onrender.com
 
